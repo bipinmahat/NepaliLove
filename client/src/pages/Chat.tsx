@@ -22,23 +22,24 @@ export default function Chat({ onOpenChat }: ChatProps) {
 
   const { data: conversations = [], isLoading } = useQuery({
     queryKey: ["/api/conversations"],
-  });
+  }) as { data: any[], isLoading: boolean };
 
   const { data: profile } = useQuery({
     queryKey: ["/api/profile"],
-  });
+  }) as { data: any };
 
   const { data: messages = [] } = useQuery({
     queryKey: ["/api/messages", selectedChat?.id],
     enabled: !!selectedChat?.id,
-  });
+  }) as { data: any[] };
 
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData: any) => {
-      return apiRequest(`/api/conversations/${selectedChat.id}/messages`, {
-        method: "POST",
-        body: messageData,
-      });
+      return apiRequest(
+        "POST",
+        `/api/conversations/${selectedChat.id}/messages`,
+        messageData
+      );
     },
     onSuccess: () => {
       setMessage("");
@@ -183,7 +184,7 @@ export default function Chat({ onOpenChat }: ChatProps) {
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
         {messages.map((msg: any) => {
-          const isMyMessage = msg.senderId === user?.id;
+          const isMyMessage = msg.senderId === (user as any)?.id;
           return (
             <div key={msg.id} className={`flex items-start space-x-2 ${isMyMessage ? 'justify-end' : ''}`}>
               {!isMyMessage && (
@@ -205,7 +206,7 @@ export default function Chat({ onOpenChat }: ChatProps) {
               </div>
               {isMyMessage && (
                 <img 
-                  src={profile?.photos?.[0] || user?.profileImageUrl || '/api/placeholder/32/32'} 
+                  src={(profile as any)?.photos?.[0] || (user as any)?.profileImageUrl || '/api/placeholder/32/32'} 
                   alt="Your profile"
                   className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                 />
