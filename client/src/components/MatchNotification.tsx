@@ -26,7 +26,7 @@ export default function MatchNotification({ match, onClose, onMessage }: MatchNo
         <div className="flex items-center justify-center space-x-6 mb-8">
           <div className="text-center">
             <img 
-              src={profile?.photos?.[0] || user?.profileImageUrl || '/api/placeholder/80/80'} 
+              src={(profile as any)?.photos?.[0] || (user as any)?.profileImageUrl || '/api/placeholder/80/80'} 
               alt="Your profile"
               className="w-20 h-20 rounded-full border-4 border-white shadow-xl object-cover"
             />
@@ -35,7 +35,7 @@ export default function MatchNotification({ match, onClose, onMessage }: MatchNo
           <div className="text-4xl animate-pulse">💕</div>
           <div className="text-center">
             <img 
-              src={match.profile?.photos?.[0] || '/api/placeholder/80/80'} 
+              src={(match.profile as any)?.photos?.[0] || '/api/placeholder/80/80'} 
               alt="Match profile"
               className="w-20 h-20 rounded-full border-4 border-white shadow-xl object-cover"
             />

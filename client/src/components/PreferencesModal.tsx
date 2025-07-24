@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import React from "react";
 
 const preferencesSchema = z.object({
   minAge: z.number().min(18, "Minimum age must be at least 18").max(100),
@@ -38,13 +39,26 @@ export default function PreferencesModal({ isOpen, onClose }: PreferencesModalPr
   const form = useForm<PreferencesFormData>({
     resolver: zodResolver(preferencesSchema),
     defaultValues: {
-      minAge: preferences?.minAge || 18,
-      maxAge: preferences?.maxAge || 35,
-      preferredGender: preferences?.preferredGender || "",
-      preferredReligion: preferences?.preferredReligion || "",
-      maxDistance: preferences?.maxDistance || 50,
+      minAge: 18,
+      maxAge: 35,
+      preferredGender: "",
+      preferredReligion: "",
+      maxDistance: 50,
     },
   });
+
+  // Update form values when preferences are loaded
+  React.useEffect(() => {
+    if (preferences) {
+      form.reset({
+        minAge: (preferences as any).minAge || 18,
+        maxAge: (preferences as any).maxAge || 35,
+        preferredGender: (preferences as any).preferredGender || "",
+        preferredReligion: (preferences as any).preferredReligion || "",
+        maxDistance: (preferences as any).maxDistance || 50,
+      });
+    }
+  }, [preferences, form]);
 
   const updatePreferencesMutation = useMutation({
     mutationFn: async (data: PreferencesFormData) => {

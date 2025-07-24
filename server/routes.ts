@@ -222,8 +222,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { swipedId, action } = req.body;
       
-      // Skip database operations for demo users
-      if (swipedId.startsWith('demo-user-')) {
+      // Skip database operations for demo users - check userId instead of swipedId
+      if (swipedId === 'demo-user-1' || swipedId === 'demo-user-2' || swipedId === 'demo-user-3' || swipedId === 'demo-user-4' || swipedId === 'demo-user-5') {
         // Simulate random match for demo users (30% chance)
         const isMatch = action === 'like' && Math.random() < 0.3;
         res.json({ success: true, isMatch });

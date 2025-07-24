@@ -48,7 +48,7 @@ export default function Profile() {
         <div className="text-center">
           <div className="relative inline-block">
             <img 
-              src={profile?.photos?.[0] || user?.profileImageUrl || '/api/placeholder/128/128'} 
+              src={(profile as any)?.photos?.[0] || (user as any)?.profileImageUrl || '/api/placeholder/128/128'} 
               alt="Your profile"
               className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
             />
@@ -60,10 +60,10 @@ export default function Profile() {
             </Button>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mt-4">
-            {profile?.name || user?.firstName} 🇳🇵
+            {(profile as any)?.name || (user as any)?.firstName || "Your Name"} 🇳🇵
           </h2>
           <p className="text-gray-600">
-            {profile?.bio || "No bio yet"}, {profile?.age || "Age not set"}
+            {(profile as any)?.bio || "No bio yet"}, {(profile as any)?.age || "Age not set"}
           </p>
         </div>
         
@@ -71,13 +71,13 @@ export default function Profile() {
         <div className="grid grid-cols-3 gap-4">
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-nepal-red">{matches.length}</div>
+              <div className="text-2xl font-bold text-nepal-red">{(matches as any[]).length}</div>
               <div className="text-sm text-gray-600">Matches</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-nepal-pink">{conversations.length}</div>
+              <div className="text-2xl font-bold text-nepal-pink">{(conversations as any[]).length}</div>
               <div className="text-sm text-gray-600">Chats</div>
             </CardContent>
           </Card>

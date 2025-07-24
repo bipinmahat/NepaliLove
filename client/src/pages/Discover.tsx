@@ -18,7 +18,7 @@ export default function Discover({ onMatch }: DiscoverProps) {
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["/api/discover"],
     refetchOnWindowFocus: false,
-  });
+  }) as { data: any[], isLoading: boolean };
 
   const swipeMutation = useMutation({
     mutationFn: async ({ swipedId, action }: { swipedId: string; action: string }) => {
@@ -121,7 +121,7 @@ export default function Discover({ onMatch }: DiscoverProps) {
         {/* Swipe Cards Stack */}
         <div className="relative h-96 max-w-sm mx-auto">
           {/* Background cards */}
-          {profiles.slice(currentIndex + 1, currentIndex + 3).map((_, index) => (
+          {profiles.slice(currentIndex + 1, currentIndex + 3).map((_: any, index: number) => (
             <div 
               key={`bg-${index}`}
               className={`absolute inset-0 bg-white rounded-3xl shadow-lg transform ${

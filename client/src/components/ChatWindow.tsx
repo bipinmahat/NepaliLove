@@ -109,8 +109,8 @@ export default function ChatWindow({ chat, onClose }: ChatWindowProps) {
       
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
-        {messages.map((msg: any) => {
-          const isMyMessage = msg.senderId === user?.id;
+        {(messages as any[]).map((msg: any) => {
+          const isMyMessage = msg.senderId === (user as any)?.id;
           return (
             <div key={msg.id} className={`flex items-start space-x-2 ${isMyMessage ? 'justify-end' : ''}`}>
               {!isMyMessage && (
@@ -132,7 +132,7 @@ export default function ChatWindow({ chat, onClose }: ChatWindowProps) {
               </div>
               {isMyMessage && (
                 <img 
-                  src={myProfile?.photos?.[0] || user?.profileImageUrl || '/api/placeholder/32/32'} 
+                  src={(myProfile as any)?.photos?.[0] || (user as any)?.profileImageUrl || '/api/placeholder/32/32'} 
                   alt="Your profile"
                   className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                 />
