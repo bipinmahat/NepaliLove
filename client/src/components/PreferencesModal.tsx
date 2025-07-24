@@ -159,7 +159,7 @@ export default function PreferencesModal({ isOpen, onClose }: PreferencesModalPr
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Any gender</SelectItem>
+                      <SelectItem value="any">Any gender</SelectItem>
                       <SelectItem value="male">Male</SelectItem>
                       <SelectItem value="female">Female</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
@@ -183,7 +183,7 @@ export default function PreferencesModal({ isOpen, onClose }: PreferencesModalPr
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Any religion</SelectItem>
+                      <SelectItem value="any">Any religion</SelectItem>
                       <SelectItem value="hindu">Hindu</SelectItem>
                       <SelectItem value="buddhist">Buddhist</SelectItem>
                       <SelectItem value="christian">Christian</SelectItem>
