@@ -3,11 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, MoreVertical, Camera, Smile } from "lucide-react";
+import { ArrowLeft, Send, MoreVertical, Camera, Smile, User } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import ProfileViewer from "@/components/ProfileViewer";
 
 interface ChatProps {
   onOpenChat?: (conversation: any) => void;
@@ -16,6 +17,7 @@ interface ChatProps {
 export default function Chat({ onOpenChat }: ChatProps) {
   const [selectedChat, setSelectedChat] = useState<any>(null);
   const [message, setMessage] = useState("");
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -171,9 +173,12 @@ export default function Chat({ onOpenChat }: ChatProps) {
             alt={selectedChat.profile?.name || 'Chat'}
             className="w-10 h-10 rounded-full object-cover"
           />
-          <div>
+          <div 
+            className="cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setSelectedProfileId(selectedChat.profile?.userId)}
+          >
             <h3 className="font-semibold text-gray-900">{selectedChat.profile?.name} 🇳🇵</h3>
-            <p className="text-xs text-green-600">Online</p>
+            <p className="text-xs text-green-600">Online • Click to view profile</p>
           </div>
         </div>
         <Button variant="ghost" size="sm">
@@ -244,6 +249,15 @@ export default function Chat({ onOpenChat }: ChatProps) {
           </Button>
         </div>
       </div>
+
+      {/* Profile Viewer Modal */}
+      {selectedProfileId && (
+        <ProfileViewer
+          isOpen={!!selectedProfileId}
+          onClose={() => setSelectedProfileId(null)}
+          userId={selectedProfileId}
+        />
+      )}
     </div>
   );
 }

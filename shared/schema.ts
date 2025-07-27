@@ -102,6 +102,14 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Blocked users
+export const blocks = pgTable("blocks", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  blockerId: varchar("blocker_id").references(() => users.id).notNull(),
+  blockedId: varchar("blocked_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, { fields: [users.id], references: [profiles.userId] }),
@@ -176,3 +184,5 @@ export type Match = typeof matches.$inferSelect;
 export type Conversation = typeof conversations.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type Block = typeof blocks.$inferSelect;
+export type InsertBlock = typeof blocks.$inferInsert;

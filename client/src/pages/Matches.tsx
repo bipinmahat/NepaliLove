@@ -1,13 +1,18 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Eye, MessageCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import ProfileViewer from "@/components/ProfileViewer";
 
 interface MatchesProps {
   onStartChat: (match: any) => void;
 }
 
 export default function Matches({ onStartChat }: MatchesProps) {
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  
   const { data: matches = [], isLoading } = useQuery({
     queryKey: ["/api/matches"],
   }) as { data: any[], isLoading: boolean };
@@ -62,17 +67,39 @@ export default function Matches({ onStartChat }: MatchesProps) {
                     Matched {formatDistanceToNow(new Date(match.createdAt), { addSuffix: true })}
                   </p>
                 </div>
-                <Button 
-                  onClick={() => onStartChat(match)}
-                  className="bg-nepal-red text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-red-700 transition-colors"
-                >
-                  Message
-                </Button>
+                <div className="flex space-x-2">
+                  <Button 
+                    onClick={() => setSelectedProfileId(match.profile?.userId)}
+                    variant="outline"
+                    size="sm"
+                    className="border-nepal-red text-nepal-red hover:bg-red-50"
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    View
+                  </Button>
+                  <Button 
+                    onClick={() => onStartChat(match)}
+                    size="sm"
+                    className="bg-nepal-red text-white hover:bg-red-700"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-1" />
+                    Chat
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {/* Profile Viewer Modal */}
+      {selectedProfileId && (
+        <ProfileViewer
+          isOpen={!!selectedProfileId}
+          onClose={() => setSelectedProfileId(null)}
+          userId={selectedProfileId}
+        />
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
   matches,
   conversations,
   messages,
+  blocks,
   type User,
   type UpsertUser,
   type Profile,
@@ -17,6 +18,8 @@ import {
   type Conversation,
   type Message,
   type InsertMessage,
+  type Block,
+  type InsertBlock,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, ne, sql, desc } from "drizzle-orm";
@@ -229,6 +232,30 @@ export class DatabaseStorage implements IStorage {
       .where(eq(messages.conversationId, conversationId))
       .orderBy(messages.createdAt);
     return msgs;
+  }
+
+  // Block operations
+  async blockUser(blockerId: string, blockedId: string): Promise<Block> {
+    const [block] = await db
+      .insert(blocks)
+      .values({ blockerId, blockedId })
+      .onConflictDoNothing()
+      .returning();
+    return block;
+  }
+
+  async isUserBlocked(userId1: string, userId2: string): Promise<boolean> {
+    const [block] = await db
+      .select()
+      .from(blocks)
+      .where(
+        or(
+          and(eq(blocks.blockerId, userId1), eq(blocks.blockedId, userId2)),
+          and(eq(blocks.blockerId, userId2), eq(blocks.blockedId, userId1))
+        )
+      )
+      .limit(1);
+    return !!block;
   }
 }
 

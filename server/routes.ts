@@ -18,7 +18,7 @@ if (!fs.existsSync(uploadDir)) {
 const upload = multer({
   dest: uploadDir,
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB limit
+    fileSize: 100 * 1024 * 1024, // 100MB limit for videos
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
@@ -77,22 +77,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/profile', isAuthenticated, upload.array('photos', 5), async (req: any, res) => {
+  app.put('/api/profile', isAuthenticated, upload.fields([{ name: 'photos', maxCount: 6 }, { name: 'video', maxCount: 1 }]), async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const profileData = req.body;
       
-      // Handle uploaded files
-      if (req.files && req.files.length > 0) {
-        const newPhotos = req.files.map((file: any) => `/uploads/${file.filename}`);
-        profileData.photos = [...(profileData.photos || []), ...newPhotos];
+      // Handle existing photos
+      let photos = [];
+      if (profileData.existingPhotos) {
+        photos = JSON.parse(profileData.existingPhotos);
+      }
+      
+      // Handle new uploaded photos
+      if (req.files && req.files.photos) {
+        const newPhotos = req.files.photos.map((file: any) => `/uploads/${file.filename}`);
+        photos = [...photos, ...newPhotos];
+      }
+      
+      // Handle video upload
+      let videoUrl = profileData.videoUrl || null;
+      if (req.files && req.files.video && req.files.video[0]) {
+        videoUrl = `/uploads/${req.files.video[0].filename}`;
       }
       
       if (profileData.age) {
         profileData.age = parseInt(profileData.age) || 18;
       }
       
-      const profile = await storage.updateProfile(userId, profileData);
+      const profile = await storage.updateProfile(userId, {
+        ...profileData,
+        photos,
+        videoUrl,
+      });
       res.json(profile);
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -107,6 +123,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(profile);
     } catch (error) {
       console.error("Error fetching profile:", error);
+      res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
+  // Get any user's profile by ID  
+  app.get('/api/profile/:userId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const profile = await storage.getProfile(userId);
+      if (!profile) {
+        return res.status(404).json({ message: "Profile not found" });
+      }
+      res.json(profile);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
       res.status(500).json({ message: "Failed to fetch profile" });
     }
   });
@@ -293,6 +324,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error saving preferences:", error);
       res.status(500).json({ message: "Failed to save preferences" });
+    }
+  });
+
+  // Block user
+  app.post('/api/block', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { blockedUserId } = req.body;
+      
+      await storage.blockUser(userId, blockedUserId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error blocking user:", error);
+      res.status(500).json({ message: "Failed to block user" });
     }
   });
 

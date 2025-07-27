@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Sliders, Heart, X, Star } from "lucide-react";
+import { Sliders, Heart, X, Star, Eye, Ban } from "lucide-react";
 import SwipeCard from "@/components/SwipeCard";
+import ProfileViewer from "@/components/ProfileViewer";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -12,6 +13,7 @@ interface DiscoverProps {
 
 export default function Discover({ onMatch }: DiscoverProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -139,31 +141,42 @@ export default function Discover({ onMatch }: DiscoverProps) {
         </div>
         
         {/* Action Buttons */}
-        <div className="flex justify-center space-x-6 mt-8">
+        <div className="flex justify-center space-x-4 mt-8">
           <Button
             onClick={() => handleSwipe('pass')}
             disabled={swipeMutation.isPending}
-            className="w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all hover:bg-gray-50"
+            className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all hover:bg-gray-50"
           >
-            <X className="h-8 w-8 text-gray-500" />
+            <X className="h-6 w-6 text-gray-500" />
           </Button>
           
           <Button
+            onClick={() => setSelectedProfileId(currentProfile?.userId)}
             disabled={swipeMutation.isPending}
-            className="w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all hover:bg-gray-50"
+            className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all hover:bg-blue-50"
           >
-            <Star className="h-8 w-8 text-blue-500" />
+            <Eye className="h-6 w-6 text-blue-500" />
           </Button>
           
           <Button
             onClick={() => handleSwipe('like')}
             disabled={swipeMutation.isPending}
-            className="w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all hover:bg-gray-50"
+            className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all hover:bg-red-50"
           >
-            <Heart className="h-8 w-8 text-nepal-red" />
+            <Heart className="h-6 w-6 text-nepal-red" />
           </Button>
         </div>
       </div>
+
+      {/* Profile Viewer Modal */}
+      {selectedProfileId && (
+        <ProfileViewer
+          isOpen={!!selectedProfileId}
+          onClose={() => setSelectedProfileId(null)}
+          userId={selectedProfileId}
+          showActions={true}
+        />
+      )}
     </div>
   );
 }
