@@ -28,29 +28,41 @@ export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  
+
   // Profile operations
   getProfile(userId: string): Promise<Profile | undefined>;
   createProfile(profile: InsertProfile): Promise<Profile>;
-  updateProfile(userId: string, profile: Partial<InsertProfile>): Promise<Profile>;
+  updateProfile(
+    userId: string,
+    profile: Partial<InsertProfile>,
+  ): Promise<Profile>;
   getProfilesForDiscovery(userId: string, limit?: number): Promise<Profile[]>;
-  
+
   // Preferences operations
   getPreferences(userId: string): Promise<Preferences | undefined>;
   upsertPreferences(preferences: InsertPreferences): Promise<Preferences>;
-  
+
   // Swipe operations
   createSwipe(swipe: InsertSwipe): Promise<void>;
   checkMutualLike(user1Id: string, user2Id: string): Promise<boolean>;
-  
+
   // Match operations
   createMatch(user1Id: string, user2Id: string): Promise<Match>;
   getUserMatches(userId: string): Promise<Match[]>;
-  
+
+  // Favorite operations
+  createFavorite(favorite: InsertFavorite): Promise<Favorite>;
+  removeFavorite(userId: string, favoriteUserId: string): Promise<void>;
+  isFavorite(userId: string, favoriteUserId: string): Promise<boolean>;
+  getUserFavorites(userId: string): Promise<Favorite[]>;
+
   // Conversation operations
-  getOrCreateConversation(user1Id: string, user2Id: string): Promise<Conversation>;
+  getOrCreateConversation(
+    user1Id: string,
+    user2Id: string,
+  ): Promise<Conversation>;
   getUserConversations(userId: string): Promise<Conversation[]>;
-  
+
   // Message operations
   createMessage(message: InsertMessage): Promise<Message>;
   getConversationMessages(conversationId: string): Promise<Message[]>;
@@ -80,7 +92,10 @@ export class DatabaseStorage implements IStorage {
 
   // Profile operations
   async getProfile(userId: string): Promise<Profile | undefined> {
-    const [profile] = await db.select().from(profiles).where(eq(profiles.userId, userId));
+    const [profile] = await db
+      .select()
+      .from(profiles)
+      .where(eq(profiles.userId, userId));
     return profile;
   }
 
@@ -89,7 +104,10 @@ export class DatabaseStorage implements IStorage {
     return newProfile;
   }
 
-  async updateProfile(userId: string, profileData: Partial<InsertProfile>): Promise<Profile> {
+  async updateProfile(
+    userId: string,
+    profileData: Partial<InsertProfile>,
+  ): Promise<Profile> {
     const [profile] = await db
       .update(profiles)
       .set({ ...profileData, updatedAt: new Date() })
@@ -98,7 +116,10 @@ export class DatabaseStorage implements IStorage {
     return profile;
   }
 
-  async getProfilesForDiscovery(userId: string, limit = 10): Promise<Profile[]> {
+  async getProfilesForDiscovery(
+    userId: string,
+    limit = 10,
+  ): Promise<Profile[]> {
     // Get profiles that haven't been swiped on by the current user
     const swipedProfiles = db
       .select({ swipedId: swipes.swipedId })
@@ -112,8 +133,8 @@ export class DatabaseStorage implements IStorage {
         and(
           ne(profiles.userId, userId),
           eq(profiles.isActive, true),
-          sql`${profiles.userId} NOT IN (${swipedProfiles})`
-        )
+          sql`${profiles.userId} NOT IN (${swipedProfiles})`,
+        ),
       )
       .limit(limit);
 
@@ -122,11 +143,16 @@ export class DatabaseStorage implements IStorage {
 
   // Preferences operations
   async getPreferences(userId: string): Promise<Preferences | undefined> {
-    const [prefs] = await db.select().from(preferences).where(eq(preferences.userId, userId));
+    const [prefs] = await db
+      .select()
+      .from(preferences)
+      .where(eq(preferences.userId, userId));
     return prefs;
   }
 
-  async upsertPreferences(preferencesData: InsertPreferences): Promise<Preferences> {
+  async upsertPreferences(
+    preferencesData: InsertPreferences,
+  ): Promise<Preferences> {
     const [prefs] = await db
       .insert(preferences)
       .values(preferencesData)
@@ -154,8 +180,8 @@ export class DatabaseStorage implements IStorage {
         and(
           eq(swipes.swiperId, user2Id),
           eq(swipes.swipedId, user1Id),
-          eq(swipes.action, 'like')
-        )
+          eq(swipes.action, "like"),
+        ),
       );
     return !!mutualLike;
   }
@@ -178,17 +204,68 @@ export class DatabaseStorage implements IStorage {
     return userMatches;
   }
 
+  // Favorite operations
+  async createFavorite(favorite: InsertFavorite): Promise<Favorite> {
+    const [newFavorite] = await db
+      .insert(favorites)
+      .values(favorite)
+      .returning();
+    return newFavorite;
+  }
+
+  async removeFavorite(userId: string, favoriteUserId: string): Promise<void> {
+    await db
+      .delete(favorites)
+      .where(
+        and(
+          eq(favorites.userId, userId),
+          eq(favorites.favoriteUserId, favoriteUserId),
+        ),
+      );
+  }
+
+  async isFavorite(userId: string, favoriteUserId: string): Promise<boolean> {
+    const [favorite] = await db
+      .select()
+      .from(favorites)
+      .where(
+        and(
+          eq(favorites.userId, userId),
+          eq(favorites.favoriteUserId, favoriteUserId),
+        ),
+      );
+    return !!favorite;
+  }
+
+  async getUserFavorites(userId: string): Promise<Favorite[]> {
+    const userFavorites = await db
+      .select()
+      .from(favorites)
+      .where(eq(favorites.userId, userId))
+      .orderBy(desc(favorites.createdAt));
+    return userFavorites;
+  }
+
   // Conversation operations
-  async getOrCreateConversation(user1Id: string, user2Id: string): Promise<Conversation> {
+  async getOrCreateConversation(
+    user1Id: string,
+    user2Id: string,
+  ): Promise<Conversation> {
     // Check if conversation already exists
     const [existingConv] = await db
       .select()
       .from(conversations)
       .where(
         or(
-          and(eq(conversations.user1Id, user1Id), eq(conversations.user2Id, user2Id)),
-          and(eq(conversations.user1Id, user2Id), eq(conversations.user2Id, user1Id))
-        )
+          and(
+            eq(conversations.user1Id, user1Id),
+            eq(conversations.user2Id, user2Id),
+          ),
+          and(
+            eq(conversations.user1Id, user2Id),
+            eq(conversations.user2Id, user1Id),
+          ),
+        ),
       );
 
     if (existingConv) {
@@ -207,7 +284,12 @@ export class DatabaseStorage implements IStorage {
     const convs = await db
       .select()
       .from(conversations)
-      .where(or(eq(conversations.user1Id, userId), eq(conversations.user2Id, userId)))
+      .where(
+        or(
+          eq(conversations.user1Id, userId),
+          eq(conversations.user2Id, userId),
+        ),
+      )
       .orderBy(desc(conversations.lastMessageAt));
     return convs;
   }
@@ -215,7 +297,7 @@ export class DatabaseStorage implements IStorage {
   // Message operations
   async createMessage(message: InsertMessage): Promise<Message> {
     const [newMessage] = await db.insert(messages).values(message).returning();
-    
+
     // Update conversation's last message timestamp
     await db
       .update(conversations)
@@ -251,8 +333,8 @@ export class DatabaseStorage implements IStorage {
       .where(
         or(
           and(eq(blocks.blockerId, userId1), eq(blocks.blockedId, userId2)),
-          and(eq(blocks.blockerId, userId2), eq(blocks.blockedId, userId1))
-        )
+          and(eq(blocks.blockerId, userId2), eq(blocks.blockedId, userId1)),
+        ),
       )
       .limit(1);
     return !!block;

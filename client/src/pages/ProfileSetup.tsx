@@ -16,7 +16,7 @@ import { apiRequest } from "@/lib/queryClient";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  age: z.number().min(18, "Must be at least 18 years old").max(100, "Must be under 100 years old"),
+  birthdate: z.string().min(1, "Please enter your date of birth"),
   gender: z.string().min(1, "Please select your gender"),
   ethnicity: z.string().optional(),
   religion: z.string().optional(),
@@ -33,11 +33,11 @@ export default function ProfileSetup() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<ProfileFormData>({
+  const form = useForm({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: "",
-      age: 18,
+      birthdate: "",
       gender: "",
       ethnicity: "",
       religion: "",
@@ -122,7 +122,7 @@ export default function ProfileSetup() {
     }
   };
 
-  const onSubmit = (data: ProfileFormData) => {
+  const onSubmit = (data: any) => {
     createProfileMutation.mutate(data);
   };
 
@@ -223,16 +223,15 @@ export default function ProfileSetup() {
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="age"
+                    name="birthdate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Age</FormLabel>
+                        <FormLabel>Date of Birth</FormLabel>
                         <FormControl>
                           <Input 
-                            type="number" 
-                            placeholder="18" 
+                            type="date" 
                             {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                            max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
                           />
                         </FormControl>
                         <FormMessage />

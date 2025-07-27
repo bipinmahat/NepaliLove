@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MapPin } from "lucide-react";
 
 interface SwipeCardProps {
@@ -11,9 +11,18 @@ export default function SwipeCard({ profile, onSwipe, isActive }: SwipeCardProps
   const [isDragging, setIsDragging] = useState(false);
   const [dragX, setDragX] = useState(0);
   const [dragY, setDragY] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const startX = useRef(0);
   const startY = useRef(0);
+
+  // Reset card position when profile changes
+  useEffect(() => {
+    setDragX(0);
+    setDragY(0);
+    setIsAnimating(false);
+    setIsDragging(false);
+  }, [profile.id]);
 
   const handleStart = (clientX: number, clientY: number) => {
     if (!isActive) return;
@@ -40,8 +49,17 @@ export default function SwipeCard({ profile, onSwipe, isActive }: SwipeCardProps
     const threshold = 100;
     
     if (Math.abs(dragX) > threshold) {
+      setIsAnimating(true);
       const direction = dragX > 0 ? 'right' : 'left';
-      onSwipe(direction);
+      
+      // Animate card off screen before calling onSwipe
+      const exitX = direction === 'right' ? window.innerWidth : -window.innerWidth;
+      setDragX(exitX);
+      
+      setTimeout(() => {
+        onSwipe(direction);
+        setIsAnimating(false);
+      }, 300);
     } else {
       // Snap back to center
       setDragX(0);
@@ -58,7 +76,7 @@ export default function SwipeCard({ profile, onSwipe, isActive }: SwipeCardProps
       ref={cardRef}
       className={`swipe-card absolute inset-0 bg-white rounded-3xl shadow-2xl cursor-grab ${
         isDragging ? 'dragging' : ''
-      }`}
+      } ${isAnimating ? 'transition-transform duration-300' : ''}`}
       style={{
         transform: `translateX(${dragX}px) translateY(${dragY}px) rotate(${rotation}deg)`,
         zIndex: isActive ? 10 : 1,

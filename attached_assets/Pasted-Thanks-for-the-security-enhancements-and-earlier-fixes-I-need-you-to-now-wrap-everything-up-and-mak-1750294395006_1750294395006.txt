@@ -1,0 +1,94 @@
+Thanks for the security enhancements and earlier fixes. I need you to now wrap everything up and make the app fully functional and ready to launch. Here's what still needs urgent attention:
+
+✅ Functional Bug Fixes
+Swipe Logic Bug:
+
+Fix swiping logic so that after a card is swiped, the next one loads centered and not in a swiped state.
+
+Ensure profile card position is mobile-optimized and centered.
+
+Preferences Section:
+
+The "Dating Preferences" section doesn’t open or load.
+
+Ensure users can view and update their preferences properly.
+
+Age Display Bug:
+
+Profiles are defaulting to age “18”.
+
+Add a birthdate or age field during signup, store it, and calculate/display real age dynamically.
+
+Photo Verification:
+
+Add a camera-based verification step after uploading a profile picture to verify real users and prevent fake accounts.
+
+Delete Account Option:
+
+The “Delete Account” button does not work under “Privacy & Safety”.
+
+Make it functional to permanently delete user data from both client and server.
+
+Block Account Option:
+
+“Block or Report Someone” doesn’t respond. Please implement this feature to:
+
+Block further interaction with reported users
+
+Log a report for moderation
+
+Remove AI-generated Accounts:
+
+Remove any dummy or AI-generated profiles from the production database so that only real users appear.
+
+🔊 UI & UX Enhancements
+Sound Effects:
+
+Add subtle sound effects:
+
+“Trash” sound when skipping
+
+“Chime” or “positive” sound when liking/matching
+
+Matches Dashboard:
+
+On the Matches page, show:
+
+Total Likes, Likes Received, Likes Given
+
+Real-time Matches
+
+Chat Integration:
+
+When a match is formed, show the user in the Chat section automatically.
+
+Add an automated message: “Say hi to your match!”
+
+Profile Page – Settings Icon:
+
+The top-right gear/settings icon doesn’t work.
+
+Either remove it or make it open real settings/preferences.
+
+🛡 Security Recap (Confirm Final Implementation)
+Please confirm these are in place before we go live:
+
+✅ Input validation & sanitization
+
+✅ Proper password hashing & encryption
+
+✅ Rate limiting on all sensitive endpoints
+
+✅ Secure API integration
+
+✅ Session control & authentication middleware
+
+✅ Secure file upload & CSP configuration
+
+✅ Safe storage of secrets and no hardcoded tokens in frontend
+
+Once you’ve resolved all of the above and confirmed full functionality on web and mobile views, please package it as a production-ready release.
+
+Let me know once it’s complete so I can begin launch preparations.
+
+Thank you!

@@ -8,6 +8,7 @@ import {
   integer,
   boolean,
   uuid,
+  date,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -40,7 +41,7 @@ export const profiles = pgTable("profiles", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   name: varchar("name").notNull(),
-  age: integer("age").notNull(),
+  birthdate: date("birthdate").notNull(),
   gender: varchar("gender").notNull(),
   ethnicity: varchar("ethnicity"),
   religion: varchar("religion"),
@@ -49,6 +50,8 @@ export const profiles = pgTable("profiles", {
   location: varchar("location"),
   photos: text("photos").array().default([]),
   videoUrl: varchar("video_url"),
+  verificationPhoto: varchar("verification_photo"),
+  isVerified: boolean("is_verified").default(false),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -73,6 +76,14 @@ export const swipes = pgTable("swipes", {
   swiperId: varchar("swiper_id").references(() => users.id).notNull(),
   swipedId: varchar("swiped_id").references(() => users.id).notNull(),
   action: varchar("action").notNull(), // 'like' or 'pass'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Favorites/Super likes table
+export const favorites = pgTable("favorites", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  favoriteUserId: varchar("favorite_user_id").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -117,6 +128,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   sentSwipes: many(swipes, { relationName: "swiper" }),
   receivedSwipes: many(swipes, { relationName: "swiped" }),
   sentMessages: many(messages, { relationName: "sender" }),
+  favorites: many(favorites, { relationName: "userFavorites" }),
+  favoritedBy: many(favorites, { relationName: "favoritedUser" }),
 }));
 
 export const profilesRelations = relations(profiles, ({ one }) => ({
@@ -130,6 +143,11 @@ export const preferencesRelations = relations(preferences, ({ one }) => ({
 export const swipesRelations = relations(swipes, ({ one }) => ({
   swiper: one(users, { fields: [swipes.swiperId], references: [users.id], relationName: "swiper" }),
   swiped: one(users, { fields: [swipes.swipedId], references: [users.id], relationName: "swiped" }),
+}));
+
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+  user: one(users, { fields: [favorites.userId], references: [users.id], relationName: "userFavorites" }),
+  favoriteUser: one(users, { fields: [favorites.favoriteUserId], references: [users.id], relationName: "favoritedUser" }),
 }));
 
 export const matchesRelations = relations(matches, ({ one }) => ({
@@ -148,11 +166,33 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   sender: one(users, { fields: [messages.senderId], references: [users.id], relationName: "sender" }),
 }));
 
+// Blocked users table
+export const blockedUsers = pgTable("blocked_users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  blockerId: varchar("blocker_id").references(() => users.id).notNull(),
+  blockedId: varchar("blocked_id").references(() => users.id).notNull(),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Reports table
+export const reports = pgTable("reports", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  reporterId: varchar("reporter_id").references(() => users.id).notNull(),
+  reportedId: varchar("reported_id").references(() => users.id).notNull(),
+  reason: varchar("reason").notNull(),
+  description: text("description"),
+  status: varchar("status").default("pending"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertProfileSchema = createInsertSchema(profiles).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  birthdate: z.string().min(1, "Date of birth is required"),
 });
 
 export const insertPreferencesSchema = createInsertSchema(preferences).omit({
@@ -181,6 +221,8 @@ export type InsertPreferences = z.infer<typeof insertPreferencesSchema>;
 export type Swipe = typeof swipes.$inferSelect;
 export type InsertSwipe = z.infer<typeof insertSwipeSchema>;
 export type Match = typeof matches.$inferSelect;
+export type Favorite = typeof favorites.$inferSelect;
+export type InsertFavorite = typeof favorites.$inferInsert;
 export type Conversation = typeof conversations.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;

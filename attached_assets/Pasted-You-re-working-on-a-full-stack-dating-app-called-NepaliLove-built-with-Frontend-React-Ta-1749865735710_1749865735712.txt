@@ -1,0 +1,48 @@
+You're working on a full-stack dating app called **NepaliLove**, built with:
+
+- Frontend: React + Tailwind CSS
+- Backend: Node.js (Express)
+- Database: PostgreSQL (via Prisma)
+
+The project was originally built on Replit, then exported to GitHub, and now re-imported to fix bugs. The goal is to make the app work 100% smoothly on both desktop and mobile.
+
+Please fix the following:
+
+1. **Profile Page Bugs:**
+   - Buttons like `Edit Profile`, `Upload Photo`, `Change Preferences`, `Logout` are not clickable — fix event handling and React states so these work properly.
+   - Some profile sections do not show updated info after changes — fix data fetching/state updates.
+
+2. **Match Popup Issue:**
+   - When two users like each other, a match popup appears but the layout is broken.
+   - Fix the match popup to show both user names and pictures properly and add a smooth animation.
+
+3. **Chat System:**
+   - Messages sent from different users show the same name. Fix message sender identification.
+   - Add user avatars next to messages and show correct timestamps.
+
+4. **Like/Dislike Buttons:**
+   - Clicking like or dislike sometimes fails without visual feedback.
+   - Fix API calls, add loading states and success/failure feedback (toast or animation).
+
+5. **Preference Filtering:**
+   - Discovery feed shows all users even if preferences are set.
+   - Make sure only users matching selected gender preference are shown.
+
+6. **Mobile Responsiveness:**
+   - On phones, layout breaks or overlaps.
+   - Fix with Tailwind responsive classes and test all views: feed, profile, match, chat, etc.
+
+7. **Branding and Auth:**
+   - Remove “Log in with Replit” branding if possible.
+   - Replace with custom login (or keep but hide branding for user experience).
+
+8. **Visual Polish:**
+   - Add smooth animations to card swipes, button hovers, and popup transitions using Framer Motion or Tailwind transitions.
+   - Ensure app looks modern, minimal, and mobile-first.
+
+9. **Hosting/Deployment:**
+   - Set it up so it’s ready to host with custom domain (GitHub Pages or Vercel).
+   - Ensure no one can publicly edit like on Lovable — this app must be user-only and private.
+
+Fix all these issues and make sure the app runs perfectly on Replit. Final result should be a working Nepali dating app that I can deploy, use, and share with friends.
+
