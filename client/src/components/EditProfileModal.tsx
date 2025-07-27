@@ -118,12 +118,7 @@ export default function EditProfileModal({ isOpen, onClose, profile }: EditProfi
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            Edit Profile
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogTitle>
+          <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
@@ -131,11 +126,34 @@ export default function EditProfileModal({ isOpen, onClose, profile }: EditProfi
             {/* Photo Upload */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Add New Photos</label>
+              
+              {/* Show selected photos preview */}
+              {photos.length > 0 && (
+                <div className="flex space-x-2 mb-2">
+                  {photos.map((photo, index) => (
+                    <div key={index} className="relative">
+                      <img 
+                        src={URL.createObjectURL(photo)} 
+                        alt={`Preview ${index + 1}`}
+                        className="w-16 h-16 rounded-lg object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setPhotos(photos.filter((_, i) => i !== index))}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               <div className="flex space-x-2">
                 <label className="cursor-pointer flex-1">
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-nepal-red transition-colors">
                     <Camera className="h-6 w-6 mx-auto mb-2 text-gray-400" />
-                    <p className="text-xs text-gray-500">Add Photos</p>
+                    <p className="text-xs text-gray-500">Add Photos ({photos.length} selected)</p>
                   </div>
                   <input
                     type="file"

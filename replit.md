@@ -61,6 +61,10 @@ A fully functional Nepali dating app built with React, TailwindCSS, and PostgreS
 - ✅ Fixed foreign key constraint errors in conversation creation
 - ✅ Improved profile edit modal with proper form reset functionality
 - ✅ Updated discovery page with appropriate empty state for real users only
+- ✅ Fixed photo upload functionality with increased file size limit (50MB)
+- ✅ Removed duplicate close buttons in edit profile modal
+- ✅ Removed non-functional settings button from profile header
+- ✅ Added photo preview functionality in edit modal
 
 ## User Preferences
 - **Chat Implementation**: Use the original/first chat code implementation (self-contained within Chat.tsx)

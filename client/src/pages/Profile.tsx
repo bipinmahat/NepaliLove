@@ -35,11 +35,8 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-center">
           <h1 className="text-xl font-semibold text-gray-900">Profile</h1>
-          <Button variant="ghost" size="sm">
-            <Settings className="h-5 w-5 text-nepal-red" />
-          </Button>
         </div>
       </div>
       
@@ -54,6 +51,7 @@ export default function Profile() {
             />
             <Button 
               size="sm"
+              onClick={() => setShowEditProfile(true)}
               className="absolute bottom-0 right-0 w-10 h-10 bg-nepal-red text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-700"
             >
               <Edit className="h-4 w-4" />
