@@ -57,7 +57,7 @@ export const profiles = pgTable("profiles", {
 // User preferences for matching
 export const preferences = pgTable("preferences", {
   id: uuid("id").defaultRandom().primaryKey(),
-  userId: varchar("user_id").references(() => users.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull().unique(),
   minAge: integer("min_age").default(18),
   maxAge: integer("max_age").default(60),
   preferredGender: varchar("preferred_gender"),

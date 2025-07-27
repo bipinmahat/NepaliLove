@@ -18,7 +18,7 @@ if (!fs.existsSync(uploadDir)) {
 const upload = multer({
   dest: uploadDir,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 50 * 1024 * 1024, // 50MB limit
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
@@ -67,7 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...profileData,
         userId,
         photos,
-        age: parseInt(profileData.age),
+        age: parseInt(profileData.age) || 18,
       });
       
       res.json(profile);
@@ -89,7 +89,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (profileData.age) {
-        profileData.age = parseInt(profileData.age);
+        profileData.age = parseInt(profileData.age) || 18;
       }
       
       const profile = await storage.updateProfile(userId, profileData);

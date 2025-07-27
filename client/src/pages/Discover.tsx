@@ -111,9 +111,7 @@ export default function Discover({ onMatch }: DiscoverProps) {
               <p className="text-sm text-gray-600">Find your perfect match</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-            <Sliders className="h-5 w-5 text-nepal-red" />
-          </Button>
+
         </div>
       </div>
       

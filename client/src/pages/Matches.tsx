@@ -10,7 +10,7 @@ interface MatchesProps {
 export default function Matches({ onStartChat }: MatchesProps) {
   const { data: matches = [], isLoading } = useQuery({
     queryKey: ["/api/matches"],
-  });
+  }) as { data: any[], isLoading: boolean };
 
   if (isLoading) {
     return (
