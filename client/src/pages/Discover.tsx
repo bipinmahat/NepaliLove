@@ -81,9 +81,9 @@ export default function Discover({ onMatch }: DiscoverProps) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-red-50 to-pink-50 pb-20 flex items-center justify-center">
         <div className="text-center px-4">
-          <div className="text-6xl mb-4">💔</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">No More Profiles</h2>
-          <p className="text-gray-600 mb-4">Check back later for new matches!</p>
+          <div className="text-6xl mb-4">🇳🇵</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Profiles Available</h2>
+          <p className="text-gray-600 mb-4">Invite friends to join and find your perfect match!</p>
           <Button 
             onClick={() => {
               queryClient.invalidateQueries({ queryKey: ["/api/discover"] });

@@ -117,97 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       let profiles = await storage.getProfilesForDiscovery(userId);
       
-      // If no real profiles available, add demo users for testing
-      if (profiles.length === 0) {
-        const demoUsers = [
-          {
-            id: 'demo-1',
-            userId: 'demo-user-1',
-            name: 'Priya Sharma',
-            age: 24,
-            gender: 'female',
-            ethnicity: 'brahmin',
-            religion: 'hindu',
-            bio: 'Love traveling and exploring new places. Looking for someone genuine and caring.',
-            lookingFor: 'serious',
-            location: 'Kathmandu',
-            photos: ['/api/placeholder/400/300'],
-            videoUrl: null,
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          {
-            id: 'demo-2',
-            userId: 'demo-user-2',
-            name: 'Raj Gurung',
-            age: 27,
-            gender: 'male',
-            ethnicity: 'gurung',
-            religion: 'buddhist',
-            bio: 'Software engineer who loves hiking and photography. Family means everything to me.',
-            lookingFor: 'marriage',
-            location: 'Pokhara',
-            photos: ['/api/placeholder/400/300'],
-            videoUrl: null,
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          {
-            id: 'demo-3',
-            userId: 'demo-user-3',
-            name: 'Maya Thapa',
-            age: 22,
-            gender: 'female',
-            ethnicity: 'chhetri',
-            religion: 'hindu',
-            bio: 'Teacher and dancer. I believe in traditional values and modern thinking.',
-            lookingFor: 'serious',
-            location: 'Lalitpur',
-            photos: ['/api/placeholder/400/300'],
-            videoUrl: null,
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          {
-            id: 'demo-4',
-            userId: 'demo-user-4',
-            name: 'Arjun Magar',
-            age: 29,
-            gender: 'male',
-            ethnicity: 'magar',
-            religion: 'hindu',
-            bio: 'Business owner with a passion for adventure sports and social work.',
-            lookingFor: 'marriage',
-            location: 'Bhaktapur',
-            photos: ['/api/placeholder/400/300'],
-            videoUrl: null,
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-          {
-            id: 'demo-5',
-            userId: 'demo-user-5',
-            name: 'Sita Newar',
-            age: 26,
-            gender: 'female',
-            ethnicity: 'newar',
-            religion: 'buddhist',
-            bio: 'Artist and cultural enthusiast. Love cooking traditional Newari food.',
-            lookingFor: 'friendship',
-            location: 'Kathmandu',
-            photos: ['/api/placeholder/400/300'],
-            videoUrl: null,
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        ];
-        profiles = demoUsers;
-      }
+      // Return only real user profiles
       
       res.json(profiles);
     } catch (error) {
@@ -222,13 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const { swipedId, action } = req.body;
       
-      // Skip database operations for demo users - check userId instead of swipedId
-      if (swipedId === 'demo-user-1' || swipedId === 'demo-user-2' || swipedId === 'demo-user-3' || swipedId === 'demo-user-4' || swipedId === 'demo-user-5') {
-        // Simulate random match for demo users (30% chance)
-        const isMatch = action === 'like' && Math.random() < 0.3;
-        res.json({ success: true, isMatch });
-        return;
-      }
+      // Process all swipes for real users only
       
       // Create swipe record for real users
       await storage.createSwipe({

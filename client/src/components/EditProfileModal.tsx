@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -47,6 +47,21 @@ export default function EditProfileModal({ isOpen, onClose, profile }: EditProfi
       lookingFor: profile?.lookingFor || "",
     },
   });
+
+  // Reset form when profile changes
+  React.useEffect(() => {
+    if (profile) {
+      form.reset({
+        name: profile.name || "",
+        age: profile.age || 18,
+        bio: profile.bio || "",
+        location: profile.location || "",
+        ethnicity: profile.ethnicity || "",
+        religion: profile.religion || "",
+        lookingFor: profile.lookingFor || "",
+      });
+    }
+  }, [profile, form]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: EditProfileFormData) => {
