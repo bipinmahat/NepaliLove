@@ -39,12 +39,7 @@ export default function NotificationsModal({ isOpen, onClose }: NotificationsMod
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            Notification Settings
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogTitle>
+          <DialogTitle>Notification Settings</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">

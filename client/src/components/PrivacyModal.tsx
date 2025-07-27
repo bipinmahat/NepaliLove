@@ -43,12 +43,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            Privacy & Safety
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogTitle>
+          <DialogTitle>Privacy & Safety</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">

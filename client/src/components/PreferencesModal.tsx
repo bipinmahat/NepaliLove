@@ -98,12 +98,7 @@ export default function PreferencesModal({ isOpen, onClose }: PreferencesModalPr
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            Dating Preferences
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </DialogTitle>
+          <DialogTitle>Dating Preferences</DialogTitle>
         </DialogHeader>
         
         <Form {...form}>
