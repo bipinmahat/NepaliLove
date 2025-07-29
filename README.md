@@ -141,5 +141,5 @@ Open a pull request 🚀
 ### 🔝 [Return to Top](#installation)
 
 
-
+The app is almost ready now.
 
