@@ -48,6 +48,15 @@ A fully functional Nepali dating app built with React, TailwindCSS, and PostgreS
 
 ## Recent Changes
 
+### 2025-01-08
+- ⚠️ **CRITICAL DATABASE ISSUE IDENTIFIED**: Old database credentials in environment variables
+  - The DATABASE_URL environment variable is pointing to an outdated/inaccessible database
+  - Database endpoint: `ep-little-shape-aempquvu` (authentication failing)
+  - Need to update database credentials in Replit Secrets to fix connection
+- ✅ Fixed TypeScript error in App.tsx (added type cast for user.hasProfile)
+- ✅ Created automatic database migration script (server/migrate.ts)
+- ✅ Updated server startup to include migration runner with connection testing
+
 ### 2025-01-24
 - ✅ Fixed critical swiping functionality - resolved "Failed to process swipe" errors
 - ✅ Implemented all Profile page settings modals (Edit Profile, Dating Preferences, Notifications, Privacy & Safety)
@@ -77,7 +86,10 @@ A fully functional Nepali dating app built with React, TailwindCSS, and PostgreS
 ### Database Configuration
 - Uses PostgreSQL with Drizzle ORM
 - Session storage in database for reliability
-- All tables successfully migrated and operational
+- **CURRENT ISSUE**: Database credentials in environment variables are outdated
+  - To fix: Update DATABASE_URL in Replit Secrets (Tools → Secrets)
+  - The app will work once fresh database credentials are provided
+- Migration script runs automatically on server startup (server/migrate.ts)
 
 ### Authentication Flow
 - Replit OpenID Connect integration

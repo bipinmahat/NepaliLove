@@ -4,6 +4,18 @@ import { db, pool } from "./db";
 export async function runMigrations() {
   try {
     console.log("Running database migrations...");
+    console.log("DATABASE_URL:", process.env.DATABASE_URL?.substring(0, 60) + "...");
+    
+    // Test connection first
+    try {
+      await db.execute(sql`SELECT 1`);
+      console.log("✓ Database connection successful");
+    } catch (connError: any) {
+      console.error("✗ Database connection failed:", connError.message);
+      console.error("\n⚠️  IMPORTANT: Please check your database credentials in Replit Secrets");
+      console.error("   The DATABASE_URL may be pointing to an old or invalid database.");
+      throw connError;
+    }
     
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS sessions (
