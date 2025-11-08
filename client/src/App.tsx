@@ -27,7 +27,7 @@ function Router() {
     <Switch>
       {!isAuthenticated ? (
         <Route path="/" component={Landing} />
-      ) : !(user as any)?.hasProfile ? (
+      ) : !user?.hasProfile ? (
         <Route path="/" component={ProfileSetup} />
       ) : (
         <Route path="/" component={Home} />

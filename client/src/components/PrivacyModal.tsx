@@ -3,13 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, Shield, UserX, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { useMutation } from "@tanstack/react-query";
 
 interface PrivacyModalProps {
   isOpen: boolean;
@@ -29,29 +25,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
     blockScreenshots: false,
     incognitoMode: false,
   });
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { toast } = useToast();
-
-  const deleteAccountMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("DELETE", "/api/account");
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Account Deleted",
-        description: "Your account has been permanently deleted.",
-      });
-      window.location.href = "/";
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete account. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleSave = () => {
     toast({
@@ -215,58 +189,23 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
             <Button 
               variant="outline" 
               className="w-full text-red-600 border-red-200 hover:bg-red-50"
-              onClick={() => {
-                toast({
-                  title: "Report Feature",
-                  description: "To report a specific user, visit their profile and use the report option.",
-                });
-              }}
             >
-              <Shield className="w-4 h-4 mr-2" />
               Block or Report Someone
             </Button>
             
-            {!showDeleteConfirm ? (
-              <Button 
-                variant="outline" 
-                className="w-full text-red-600 border-red-200 hover:bg-red-50"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                <UserX className="w-4 h-4 mr-2" />
-                Delete Account
-              </Button>
-            ) : (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center mb-2">
-                  <AlertTriangle className="w-4 h-4 text-red-600 mr-2" />
-                  <span className="text-sm font-medium text-red-900">
-                    Permanently Delete Account?
-                  </span>
-                </div>
-                <p className="text-xs text-red-700 mb-3">
-                  This action cannot be undone. All your data will be permanently deleted.
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => deleteAccountMutation.mutate()}
-                    disabled={deleteAccountMutation.isPending}
-                    className="flex-1"
-                  >
-                    {deleteAccountMutation.isPending ? "Deleting..." : "Delete Forever"}
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Button 
+              variant="outline" 
+              className="w-full text-gray-600 border-gray-200 hover:bg-gray-50"
+            >
+              Download My Data
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="w-full text-red-600 border-red-200 hover:bg-red-50"
+            >
+              Delete Account
+            </Button>
           </div>
 
           <div className="flex space-x-3 pt-4">

@@ -6,7 +6,6 @@ import SwipeCard from "@/components/SwipeCard";
 import ProfileViewer from "@/components/ProfileViewer";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { useSoundEffects } from "@/hooks/useSoundEffects";
 
 interface DiscoverProps {
   onMatch: (matchData: any) => void;
@@ -16,16 +15,15 @@ export default function Discover({ onMatch }: DiscoverProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { playSwipeSound, playMatchSound } = useSoundEffects();
   const queryClient = useQueryClient();
 
-  const { data: profiles = [], isLoading } = useQuery<any[]>({
+  const { data: profiles = [], isLoading } = useQuery({
     queryKey: ["/api/discover"],
     refetchOnWindowFocus: false,
   }) as { data: any[], isLoading: boolean };
 
   const swipeMutation = useMutation({
-    mutationFn: async ({ swipedId, action }: { swipedId: string; action: 'like' | 'pass' }) => {
+    mutationFn: async ({ swipedId, action }: { swipedId: string; action: string }) => {
       const response = await apiRequest("POST", "/api/swipe", { swipedId, action });
       return response.json();
     },
@@ -39,13 +37,6 @@ export default function Discover({ onMatch }: DiscoverProps) {
       }
       
       // Move to next card
-      // Play appropriate sound effect
-      playSwipeSound(variables.action as 'like' | 'pass');
-      
-      if (data.isMatch) {
-        playMatchSound();
-      }
-      
       setCurrentIndex(prev => prev + 1);
       
       // Refetch profiles if we're running low
@@ -63,26 +54,6 @@ export default function Discover({ onMatch }: DiscoverProps) {
     },
   });
 
-  const favoriteMutation = useMutation({
-    mutationFn: async (favoriteUserId: string) => {
-      const response = await apiRequest("POST", "/api/favorites", { favoriteUserId });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      toast({
-        title: data.isFavorite ? "Added to Favorites!" : "Removed from Favorites",
-        description: data.isFavorite ? "This person has been favorited." : "This person has been unfavorited.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to process favorite. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleSwipe = (action: 'like' | 'pass') => {
     const currentProfile = profiles[currentIndex];
     if (currentProfile) {
@@ -95,13 +66,6 @@ export default function Discover({ onMatch }: DiscoverProps) {
 
   const handleCardSwipe = (direction: 'left' | 'right') => {
     handleSwipe(direction === 'right' ? 'like' : 'pass');
-  };
-
-  const handleFavorite = () => {
-    const currentProfile = profiles[currentIndex];
-    if (currentProfile) {
-      favoriteMutation.mutate(currentProfile.userId);
-    }
   };
 
   if (isLoading) {
@@ -155,7 +119,7 @@ export default function Discover({ onMatch }: DiscoverProps) {
       
       <div className="relative px-4 py-6">
         {/* Swipe Cards Stack */}
-        <div className="relative h-[500px] w-full max-w-sm mx-auto px-4 sm:px-0">
+        <div className="relative h-96 max-w-sm mx-auto">
           {/* Background cards */}
           {profiles.slice(currentIndex + 1, currentIndex + 3).map((_: any, index: number) => (
             <div 
@@ -189,7 +153,7 @@ export default function Discover({ onMatch }: DiscoverProps) {
           <Button
             onClick={() => setSelectedProfileId(currentProfile?.userId)}
             disabled={swipeMutation.isPending}
-          className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all hover:bg-blue-50"
+            className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all hover:bg-blue-50"
           >
             <Eye className="h-6 w-6 text-blue-500" />
           </Button>
@@ -200,7 +164,6 @@ export default function Discover({ onMatch }: DiscoverProps) {
             className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-all hover:bg-red-50"
           >
             <Heart className="h-6 w-6 text-nepal-red" />
-
           </Button>
         </div>
       </div>
