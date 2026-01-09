@@ -11,7 +11,7 @@ export function useWebSocket(onMessage: (data: any) => void) {
     socketRef.current = socket;
 
     socket.onopen = () => {
-      console.log('WebSocket connected');
+      console.debug('WebSocket connected');
     };
 
     socket.onmessage = (event) => {
@@ -24,7 +24,7 @@ export function useWebSocket(onMessage: (data: any) => void) {
     };
 
     socket.onclose = () => {
-      console.log('WebSocket disconnected');
+      console.debug('WebSocket disconnected');
     };
 
     socket.onerror = (error) => {

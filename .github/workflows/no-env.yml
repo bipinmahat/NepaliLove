@@ -1,0 +1,17 @@
+name: No .env in repo
+
+on: [push, pull_request]
+
+jobs:
+  check-dotenv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for .env file
+        run: |
+          if [ -f .env ] || git ls-files --error-unmatch .env >/dev/null 2>&1; then
+            echo "ERROR: .env is present in repository root. Please remove it and add it to .gitignore.";
+            exit 1;
+          else
+            echo ".env not present";
+          fi

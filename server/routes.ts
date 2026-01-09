@@ -3,7 +3,8 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { log } from "./vite";
+import { setupAuth, isAuthenticated, getSessionStore } from "./replitAuth";
 import {
   insertProfileSchema,
   insertPreferencesSchema,
@@ -17,6 +18,42 @@ import { eq, or } from "drizzle-orm";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+
+// media magic header validation
+async function validateMediaFile(filePath: string, mimetype: string) {
+  try {
+    const fd = await fs.promises.open(filePath, "r");
+    const header = Buffer.alloc(12);
+    await fd.read(header, 0, 12, 0);
+    await fd.close();
+
+    // images
+    if (mimetype.startsWith("image/")) {
+      // JPEG
+      if (header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff) return true;
+      // PNG
+      if (header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4e && header[3] === 0x47) return true;
+      // GIF
+      if (header.toString("ascii", 0, 3) === "GIF") return true;
+      // WebP ('RIFF'....'WEBP')
+      if (header.toString("ascii", 0, 4) === "RIFF") return true;
+      return false;
+    }
+
+    // videos: check for MP4 (ftyp) or WebM (EBML signature)
+    if (mimetype.startsWith("video/")) {
+      // WebM/Matroska: 0x1A 0x45 0xDF 0xA3
+      if (header[0] === 0x1a && header[1] === 0x45 && header[2] === 0xdf && header[3] === 0xa3) return true;
+      // MP4: 'ftyp' box within first 12 bytes
+      if (header.toString().includes("ftyp")) return true;
+      return false;
+    }
+
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
 
 // Configure multer for file uploads
 const uploadDir = path.join(process.cwd(), "uploads");
@@ -77,8 +114,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const profileData = req.body;
 
         // Handle uploaded files
-        const photos =
-          req.files?.map((file: any) => `/uploads/${file.filename}`) || [];
+        // Validate file signatures to avoid spoofed MIME types
+        const photos: string[] = [];
+        if (req.files && Array.isArray(req.files)) {
+          for (const file of req.files) {
+            const filePath = path.join(uploadDir, file.filename);
+            const ok = await validateMediaFile(filePath, file.mimetype);
+            if (!ok) {
+              // remove invalid file
+              try {
+                fs.unlinkSync(filePath);
+              } catch (e) {
+                // ignore
+              }
+              return res.status(400).json({ message: "Invalid media file" });
+            }
+            photos.push(`/uploads/${file.filename}`);
+          }
+        }
 
         const profile = await storage.createProfile({
           ...profileData,
@@ -113,17 +166,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
           photos = JSON.parse(profileData.existingPhotos);
         }
 
-        // Handle new uploaded photos
+        // Handle new uploaded photos with signature validation
         if (req.files && req.files.photos) {
-          const newPhotos = req.files.photos.map(
-            (file: any) => `/uploads/${file.filename}`,
-          );
-          photos = [...photos, ...newPhotos];
+          for (const file of req.files.photos) {
+            const filePath = path.join(uploadDir, file.filename);
+            const ok = await validateMediaFile(filePath, file.mimetype);
+            if (!ok) {
+              try {
+                fs.unlinkSync(filePath);
+              } catch (e) {
+                // ignore
+              }
+              return res.status(400).json({ message: "Invalid media file" });
+            }
+            photos.push(`/uploads/${file.filename}`);
+          }
         }
 
-        // Handle video upload
+        // Handle video upload with signature validation
         let videoUrl = profileData.videoUrl || null;
         if (req.files && req.files.video && req.files.video[0]) {
+          const file = req.files.video[0];
+          const filePath = path.join(uploadDir, file.filename);
+          const ok = await validateMediaFile(filePath, file.mimetype);
+          if (!ok) {
+            try {
+              fs.unlinkSync(filePath);
+            } catch (e) {
+              // ignore
+            }
+            return res.status(400).json({ message: "Invalid media file" });
+          }
           videoUrl = `/uploads/${req.files.video[0].filename}`;
         }
 
@@ -429,13 +502,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WebSocket server for real-time chat
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
 
-  wss.on("connection", (ws) => {
-    console.log("New WebSocket connection");
+  wss.on("connection", async (ws, req) => {
+    // Validate session cookie using the session store (connect-pg-simple)
+    const cookies = req?.headers?.cookie;
+    if (!cookies || !cookies.includes("connect.sid")) {
+      log("Rejected WebSocket connection without session cookie", "ws");
+      try {
+        ws.close(1008, "Unauthorized");
+      } catch (e) {
+        // swallow
+      }
+      return;
+    }
+
+    const sessionStore = getSessionStore();
+    if (!sessionStore) {
+      log("Session store not available; rejecting WS connection", "ws");
+      try {
+        ws.close(1011, "Server configuration");
+      } catch (e) {
+        // swallow
+      }
+      return;
+    }
+
+    // Extract connect.sid cookie value (plain session id)
+    const sidRaw = cookies
+      .split(";")
+      .map((c) => c.trim())
+      .find((c) => c.startsWith("connect.sid="));
+
+    if (!sidRaw) {
+      log("No connect.sid cookie found; rejecting WS connection", "ws");
+      ws.close(1008, "Unauthorized");
+      return;
+    }
+
+    const sid = decodeURIComponent(sidRaw.split("=")[1] || "");
+
+    try {
+      // sessionStore.get follows (sid, cb)
+      sessionStore.get(sid, (err: any, sess: any) => {
+        if (err || !sess) {
+          log("Invalid or expired session; rejecting WS connection", "ws");
+          try {
+            ws.close(1008, "Unauthorized");
+          } catch (e) {
+            // swallow
+          }
+          return;
+        }
+
+        // attach session to socket for later use if needed
+        (ws as any).session = sess;
+        (ws as any).authUser = sess?.passport || sess?.user || null;
+
+        log("New WebSocket connection (authenticated)", "ws");
+      });
+    } catch (e) {
+      log("Error validating session for WS connection", "ws");
+      ws.close(1011, "Server error");
+      return;
+    }
 
     ws.on("message", (data) => {
       try {
         const message = JSON.parse(data.toString());
-        console.log("Received message:", message);
+        log(`Received message: ${JSON.stringify(message)}`, "ws");
 
         // Broadcast to all clients (in a real app, you'd filter by conversation)
         wss.clients.forEach((client) => {
@@ -449,7 +582,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
 
     ws.on("close", () => {
-      console.log("WebSocket connection closed");
+      log("WebSocket connection closed", "ws");
     });
   });
 

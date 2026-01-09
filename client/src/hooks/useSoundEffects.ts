@@ -38,7 +38,7 @@ export function useSoundEffects() {
       oscillator.stop(context.currentTime + 0.3);
     } catch (error) {
       // Silent fail if audio not supported
-      console.log('Audio not supported');
+      console.warn('Audio not supported');
     }
   }, [initAudioContext]);
 
@@ -64,7 +64,7 @@ export function useSoundEffects() {
       oscillator.start(context.currentTime);
       oscillator.stop(context.currentTime + 0.5);
     } catch (error) {
-      console.log('Audio not supported');
+      console.warn('Audio not supported');
     }
   }, [initAudioContext]);
 

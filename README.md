@@ -62,9 +62,19 @@ npm install
 ```
 
 3. **Set up environment variables:**
-Create a .env file in the root directory and add:
-<pre> env DATABASE_URL=your_postgres_connection_string JWT_SECRET=your_secret_key PORT=4000  </pre>
-🔒 Replace values with your actual DB credentials and secret key.
+Create a `.env` file in the root directory and add (example values in `.env.example`):
+
+```env
+DATABASE_URL=postgres://user:pass@host/db?sslmode=require
+SESSION_SECRET=a-long-random-string
+# Optional (only if using Replit OIDC locally)
+REPLIT_DOMAINS=localhost
+ISSUER_URL=https://replit.com/oidc
+REPL_ID=your-replit-client-id
+NODE_ENV=development
+PORT=5000
+```
+🔒 Replace values with your actual DB credentials and secret key. Do **not** commit this file; `.env` is now ignored by Git.
 
 4. **Start the Database (if needed):**
 ```bash
@@ -72,20 +82,32 @@ npm run db:push
 ```
 
 ▶️ Usage
-To start the app:
-```bash
-# Start backend
-npm run dev:server
+To start the app in development (server + client served together):
 
-# In a separate terminal, start frontend
-npm run dev:client
-Visit http://localhost:5173 to use the app.
+```bash
+npm install
+npm run dev
+# open http://localhost:5000 (server serves both API and client in dev)
 ```
 
-🧪 Testing
-Run the tests with:
+Build for production (client is built with Vite and a server bundle is produced):
+
 ```bash
-npm test
+npm run build
+npm run start
+# server will serve built client from `dist/public` (default port 5000)
+```
+
+Type checking:
+
+```bash
+npm run check
+```
+
+Database migrations (uses drizzle-kit):
+
+```bash
+npm run db:push
 ```
 
 ✨ Features
@@ -105,6 +127,13 @@ npm test
 📱 Mobile-first design (Tailwind)
 
 🧪 Seeded demo users for preview
+
+---
+
+## ⚠️ Security notes
+
+- WebSocket connections are required to present a session cookie to connect; however, the server currently performs a basic presence check only — consider adding full session validation on the upgrade to authenticate connections and scope broadcasts to conversations.
+- Uploaded files are stored in `uploads/` and served statically. Multer currently filters by MIME type only — validate file signatures and add access control for sensitive files before relying on public URLs.
 
 
 🧱 Project Structure

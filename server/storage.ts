@@ -7,6 +7,7 @@ import {
   conversations,
   messages,
   blocks,
+  favorites,
   type User,
   type UpsertUser,
   type Profile,
@@ -20,6 +21,8 @@ import {
   type InsertMessage,
   type Block,
   type InsertBlock,
+  type Favorite,
+  type InsertFavorite,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, ne, sql, desc } from "drizzle-orm";
@@ -188,11 +191,29 @@ export class DatabaseStorage implements IStorage {
 
   // Match operations
   async createMatch(user1Id: string, user2Id: string): Promise<Match> {
+    // Use onConflictDoNothing to avoid duplicate matches during races.
     const [match] = await db
       .insert(matches)
       .values({ user1Id, user2Id })
+      .onConflictDoNothing()
       .returning();
-    return match;
+
+    if (match) {
+      return match;
+    }
+
+    // If insert did nothing (duplicate), fetch the existing match.
+    const [existingMatch] = await db
+      .select()
+      .from(matches)
+      .where(
+        or(
+          and(eq(matches.user1Id, user1Id), eq(matches.user2Id, user2Id)),
+          and(eq(matches.user1Id, user2Id), eq(matches.user2Id, user1Id)),
+        ),
+      );
+
+    return existingMatch as Match;
   }
 
   async getUserMatches(userId: string): Promise<Match[]> {
@@ -206,11 +227,29 @@ export class DatabaseStorage implements IStorage {
 
   // Favorite operations
   async createFavorite(favorite: InsertFavorite): Promise<Favorite> {
+    // Use onConflictDoNothing to avoid duplicate favorites during races.
     const [newFavorite] = await db
       .insert(favorites)
       .values(favorite)
+      .onConflictDoNothing()
       .returning();
-    return newFavorite;
+
+    if (newFavorite) {
+      return newFavorite;
+    }
+
+    // If insert did nothing, fetch existing favorite
+    const [existingFavorite] = await db
+      .select()
+      .from(favorites)
+      .where(
+        and(
+          eq(favorites.userId, favorite.userId),
+          eq(favorites.favoriteUserId, favorite.favoriteUserId),
+        ),
+      );
+
+    return existingFavorite as Favorite;
   }
 
   async removeFavorite(userId: string, favoriteUserId: string): Promise<void> {
@@ -251,7 +290,18 @@ export class DatabaseStorage implements IStorage {
     user1Id: string,
     user2Id: string,
   ): Promise<Conversation> {
-    // Check if conversation already exists
+    // Attempt to create the conversation, tolerating duplicates (race-safe)
+    const [newConv] = await db
+      .insert(conversations)
+      .values({ user1Id, user2Id })
+      .onConflictDoNothing()
+      .returning();
+
+    if (newConv) {
+      return newConv;
+    }
+
+    // If insert did nothing (duplicate), fetch the existing conversation
     const [existingConv] = await db
       .select()
       .from(conversations)
@@ -268,16 +318,7 @@ export class DatabaseStorage implements IStorage {
         ),
       );
 
-    if (existingConv) {
-      return existingConv;
-    }
-
-    // Create new conversation
-    const [newConv] = await db
-      .insert(conversations)
-      .values({ user1Id, user2Id })
-      .returning();
-    return newConv;
+    return existingConv as Conversation;
   }
 
   async getUserConversations(userId: string): Promise<Conversation[]> {

@@ -31,6 +31,8 @@ export function getSession() {
     ttl: sessionTtl,
     tableName: "sessions",
   });
+  // expose the session store instance so websocket handlers can validate sessions on upgrade
+  (getSession as any)._store = sessionStore;
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
@@ -43,6 +45,10 @@ export function getSession() {
       sameSite: 'strict',
     },
   });
+}
+
+export function getSessionStore() {
+  return (getSession as any)._store as any | null;
 }
 
 function updateUserSession(
