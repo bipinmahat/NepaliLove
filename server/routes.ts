@@ -4,6 +4,9 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { log } from "./vite";
+import { safeLog } from "./logger";
+import cookie from "cookie";
+import signature from "cookie-signature";
 import { setupAuth, isAuthenticated, getSessionStore } from "./replitAuth";
 import {
   insertProfileSchema,
@@ -538,13 +541,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return;
     }
 
-    const sid = decodeURIComponent(sidRaw.split("=")[1] || "");
+    let sid = decodeURIComponent(sidRaw.split("=")[1] || "");
+
+    // If the cookie is signed (starts with s:), unsign it using SESSION_SECRET
+    if (sid.startsWith("s:")) {
+      const unsigned = signature.unsign(sid.slice(2), process.env.SESSION_SECRET || "");
+      if (!unsigned) {
+        safeLog("warn", "Failed to unsign session cookie; rejecting WS connection");
+        ws.close(1008, "Unauthorized");
+        return;
+      }
+      sid = unsigned;
+    }
 
     try {
       // sessionStore.get follows (sid, cb)
       sessionStore.get(sid, (err: any, sess: any) => {
         if (err || !sess) {
-          log("Invalid or expired session; rejecting WS connection", "ws");
+          safeLog("warn", "Invalid or expired session; rejecting WS connection");
           try {
             ws.close(1008, "Unauthorized");
           } catch (e) {
@@ -555,9 +569,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // attach session to socket for later use if needed
         (ws as any).session = sess;
-        (ws as any).authUser = sess?.passport || sess?.user || null;
+        // try to extract user id from common session shapes
+        const passportUser = sess?.passport?.user;
+        const possibleUser = passportUser || sess?.user || sess;
+        const userId =
+          passportUser?.claims?.sub || possibleUser?.claims?.sub || possibleUser?.id || null;
+        (ws as any).userId = userId;
 
-        log("New WebSocket connection (authenticated)", "ws");
+        safeLog("info", "New WebSocket connection (authenticated)", { userId });
+
+        // Now that the connection is authenticated, attach message handlers
+        ws.on("message", async (data) => {
+          try {
+            const message = JSON.parse(data.toString());
+            safeLog("debug", "WS message received", { userId, message });
+
+            // enforce message schema: { type: 'send_message', conversationId, content }
+            if (message?.type === "send_message") {
+              const { conversationId, content } = message;
+              if (!conversationId || !content) {
+                ws.send(JSON.stringify({ type: "error", message: "Invalid message" }));
+                return;
+              }
+
+              // ensure sender matches session user
+              if (!userId) {
+                ws.send(JSON.stringify({ type: "error", message: "Unauthorized" }));
+                return;
+              }
+
+              // Create message through storage layer
+              const newMsg = await storage.createMessage({
+                conversationId,
+                senderId: userId,
+                content,
+              });
+
+              // fetch conversation to determine recipients
+              const conv = await storage.getConversationById(conversationId);
+              if (!conv) {
+                ws.send(JSON.stringify({ type: "error", message: "Conversation not found" }));
+                return;
+              }
+
+              // broadcast only to clients that are participants
+              wss.clients.forEach((client) => {
+                const cUserId = (client as any).userId;
+                if (cUserId && client.readyState === WebSocket.OPEN) {
+                  if (
+                    cUserId === conv.user1Id ||
+                    cUserId === conv.user2Id
+                  ) {
+                    client.send(JSON.stringify({ type: "new_message", message: newMsg }));
+                  }
+                }
+              });
+            }
+          } catch (error) {
+            safeLog("error", "Error processing WebSocket message", { error });
+          }
+        });
       });
     } catch (e) {
       log("Error validating session for WS connection", "ws");

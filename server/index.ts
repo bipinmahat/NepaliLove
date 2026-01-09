@@ -3,6 +3,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { safeLog } from "./logger";
 
 const app = express();
 
@@ -64,7 +65,7 @@ app.use((req, res, next) => {
     if (!res.headersSent) {
       res.status(status).json({ message });
     }
-    console.error('Error:', err);
+    safeLog("error", "Unhandled error in request handler", { err });
   });
 
   // importantly only setup vite in development and after

@@ -335,6 +335,14 @@ export class DatabaseStorage implements IStorage {
     return convs;
   }
 
+  async getConversationById(id: string): Promise<Conversation | undefined> {
+    const [conv] = await db
+      .select()
+      .from(conversations)
+      .where(eq(conversations.id, id));
+    return conv;
+  }
+
   // Message operations
   async createMessage(message: InsertMessage): Promise<Message> {
     const [newMessage] = await db.insert(messages).values(message).returning();
