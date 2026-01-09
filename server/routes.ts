@@ -21,6 +21,7 @@ import { eq, or } from "drizzle-orm";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { validateMediaFile } from "./media";
 
 // media magic header validation
 async function validateMediaFile(filePath: string, mimetype: string) {
@@ -121,8 +122,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const photos: string[] = [];
         if (req.files && Array.isArray(req.files)) {
           for (const file of req.files) {
-            const filePath = path.join(uploadDir, file.filename);
-            const ok = await validateMediaFile(filePath, file.mimetype);
+                  const filePath = path.join(uploadDir, file.filename);
+                  const ok = await validateMediaFile(filePath, file.mimetype);
             if (!ok) {
               // remove invalid file
               try {
